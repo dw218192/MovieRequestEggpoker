@@ -1,0 +1,28 @@
+services:
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - AUTO_UPDATE=true #optional
+      - RUN_OPTS=-x -p ${JACKETT_PORT} #optional
+    volumes:
+      - ${JACKETT_CONFIG_DIR}:/config
+      - ${JACKETT_DOWNLOADS_DIR}:/downloads
+    ports:
+      - ${JACKETT_PORT}:${JACKETT_PORT}
+    restart: unless-stopped
+
+  movie-request-server:
+    build: .
+    container_name: movie-request-server
+    ports:
+      - "${MOVIE_REQUEST_SERVER_PORT}:${MOVIE_REQUEST_SERVER_PORT}"
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_ENV=development
+    depends_on:
+      - jackett

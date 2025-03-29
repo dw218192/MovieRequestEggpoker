@@ -1,0 +1,17 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+!/app/static/tablesort-5.3.0/dist
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Data files
+_data
+
+# Log files
+_logs

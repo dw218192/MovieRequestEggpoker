@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div id="loginModal">
+        <div id="loginBox">
+            <h3>Login to Jellyfin</h3>
+            <input id="username" placeholder="Username"><br><br>
+            <input id="password" type="password" placeholder="Password"><br><br>
+            <button id="loginBtn">Login</button>
+            <div id="loginError" style="color:red; margin-top:10px;"></div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='login.js') }}"></script>
+</body>
+
+</html>

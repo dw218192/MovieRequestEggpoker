@@ -1,0 +1,27 @@
+<table id="result-table" class="sortable">
+    <p> Found {{ entries|length }} entries </p>
+    <thead>
+        <tr>
+            <th>Torrent Name</th>
+            <th>Published</th>
+            <th>File Format (Inferred)</th>
+            <th>SE</th>
+            <th>LE</th>
+            <th>Size</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in entries %}
+        <tr>
+            <td>{{ entry.get("Title", "Unknown") }}</td>
+            <td>{{ entry.get("PublishDate", "Unknown") }}</td>
+            <td>{{ entry.get("FileFormat", "Unknown") }}</td>
+            <td>{{ entry.get("Seeders", "Unknown") }}</td>
+            <td>{{ entry.get("Peers", "Unknown") }}</td>
+            <td>
+                {{ "%.2f GB" % (entry.get("Size", 0) / 1024 / 1024 / 1024) if entry.get("Size") else "Unknown" }}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -1,0 +1,14 @@
+[project]
+name = "movie-request-service"
+version = "0.1.0"
+description = """
+minimal movie request service where users can request movies which will be downloaded and stored on the server
+"""
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = ["flask[async]", "flask-sqlalchemy", "httpx", "python-dotenv"]
+
+[dependency-groups]
+dev = ["pytest", "pytest-flask"]
+tool = []

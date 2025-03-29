@@ -1,0 +1,44 @@
+<h2>qbitTorrent Stats</h2>
+<p>Num of jobs: {{ entries | length }}</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Torrent Name</th>
+            <th>Size</th>
+            <th>Downspeed</th>
+            <th>Progress</th>
+            <th>ETA</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in entries %}
+        {% set name = entry.get("name", "Unknown") %}
+        {% set progress = entry.get("progress", 0) %}
+        {% set eta = entry.get("eta", -1) %}
+        {% set bars = (progress * 10) | round(0, 'floor') %}
+        {% set completed = progress == 1.0 %}
+        <tr>
+            <td>{{ name }}</td>
+            <td>{{ "%.2f GB" % (entry.get("total_size", 0) / 1024 / 1024 / 1024) if entry.get("total_size") else
+                "Unknown" }}</td>
+            <td>{{ "%.2f KB/s" % (entry.get("dlspeed", 0) / 1024) if entry.get("dlspeed") else "Unknown" }}</td>
+            <td>
+                {{ "%.1f"|format(progress * 100) }}%
+                <code>[
+                    {% for i in range(10) %}
+                        {{ '#' if i < bars else '-' }}
+                    {% endfor %}
+                ]</code>
+            </td>
+            <td>
+                {% if not completed %}
+                {{ eta // 60 }} min
+                {% else %}
+                ∞
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

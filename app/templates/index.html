@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Movie Requests</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div id="mainContent">
+        <details>
+            <summary>Show/Hide qbittorrent live stats</summary>
+            <div id="qbittorrent"></div>
+        </details>
+        <div id="userProfile"></div>
+
+        <h2 class="ascii-heading">Create a new Request</h2>
+        <select id="searchType">
+            <option value="text">Search Text</option>
+            <option value="magnet">Magnet Link</option>
+        </select>
+        <input id="searchInput" placeholder="Enter search or magnet">
+        <button id="searchBtn">Run</button>
+        <span id="loading" style="display:none;">⏳ Loading...</span>
+        <div id="result"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
+    <script src="{{ url_for('static', filename='tablesort-5.3.0/dist/tablesort.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='tablesort-5.3.0/dist/sorts/tablesort.date.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='tablesort-5.3.0/dist/sorts/tablesort.filesize.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='tablesort-5.3.0/dist/sorts/tablesort.number.min.js') }}"></script>
+</body>
+
+</html>

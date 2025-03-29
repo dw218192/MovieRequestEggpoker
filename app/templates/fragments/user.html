@@ -1,0 +1,46 @@
+<h2>User Profile</h2>
+<div class="profile-box">
+    <div class="profile-pic-container"></div>
+    <img src="{{ user.profile_pic_url|default('/static/default-avatar.png') }}" alt="Profile Picture"
+        class="profile-pic" style="width: 50px; height: 50px;">
+</div>
+<div class="user-details">
+    <div class="field">
+        <span class="label">Username:</span>
+        <span class="value">{{ user.username }}</span>
+    </div>
+    <div class="field">
+        <span class="label">User ID:</span>
+        <span class="value">{{ user.id }}</span>
+    </div>
+    <div class="field">
+        <span class="label">Access Token:</span>
+        <span class="value">{{ user.token }}</span>
+    </div>
+</div>
+<form action="/api/logout" method="post">
+    <button type="submit">Logout</button>
+</form>
+</div>
+
+<div class="scroll-table">
+    <h3>Active Requests</h3>
+    {% if requests %}
+    <table>
+        <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Created</th>
+        </tr>
+        {% for r in requests %}
+        <tr>
+            <td>{{ r.title }}</td>
+            <td>{{ r.status }}</td>
+            <td>{{ r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "-" }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No active requests.</p>
+    {% endif %}
+</div>

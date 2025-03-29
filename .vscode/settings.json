@@ -1,0 +1,16 @@
+{
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    "editor.formatOnSave": true,
+    "logViewer.watch": [
+        {
+            "title": "Jackett",
+            "pattern": "${workspaceFolder}/_logs/jackett.log",
+        },
+        {
+            "title": "Movie Request Server",
+            "pattern": "${workspaceFolder}/_logs/movie_request_server.log",
+        }
+    ]
+}
