@@ -8,29 +8,29 @@ load_dotenv()
 
 g_log_level = os.getenv("MOVIE_REQUEST_SERVER_LOG_LEVEL", "INFO").upper()
 g_logging_config = {
-    'version': 1,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'default',
+    "version": 1,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "default",
         }
     },
-    'formatters': {
-        'default': {
-            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    "formatters": {
+        "default": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         }
     },
-    'loggers': {
-        'root': {
-            'handlers': ['console'],
-            'level': 'WARNING',
+    "loggers": {
+        "root": {
+            "handlers": ["console"],
+            "level": "WARNING",
         },
         __package__: {
-            'handlers': ['console'],
-            'level': g_log_level,
-            'propagate': False,
+            "handlers": ["console"],
+            "level": g_log_level,
+            "propagate": False,
         },
-    }
+    },
 }
 
 logging.config.dictConfig(g_logging_config)

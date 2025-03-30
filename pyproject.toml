@@ -7,7 +7,15 @@ minimal movie request service where users can request movies which will be downl
 readme = "README.md"
 requires-python = ">=3.11"
 
-dependencies = ["flask[async]", "flask-sqlalchemy", "httpx", "python-dotenv"]
+dependencies = [
+    "flask[async]",
+    "httpx",
+    "python-dotenv",
+    "dataclasses_json",
+    "libtorrent",
+    "requests_toolbelt",
+    "guessit",
+]
 
 [dependency-groups]
 dev = ["pytest", "pytest-flask"]

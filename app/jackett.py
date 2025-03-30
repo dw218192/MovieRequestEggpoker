@@ -2,7 +2,8 @@ import httpx
 import os
 import logging
 import contextlib
-import re
+from typing import TypedDict, NotRequired, Literal
+from guessit import guessit
 
 JACKETT_PORT = os.getenv("JACKETT_PORT", 9117)
 JACKETT_API_URL = f"http://localhost:{JACKETT_PORT}/api/v2.0"
@@ -23,35 +24,38 @@ async def async_client():
         yield client
 
 
-def _infer_file_format(title: str) -> str:
-    title = title.lower()
+class MetadataDict(TypedDict):
+    """
+    https://github.com/guessit-io/guessit/blob/develop/docs/properties.md
+    """
 
-    # Define patterns with priority order
-    formats = [
-        ("remux", r"\bremux\b"),
-        ("bluray", r"\bblu[-]?ray\b"),
-        ("web-dl", r"\bweb[-\. ]?dl\b"),
-        ("webrip", r"\bweb[-\. ]?rip\b"),
-        ("hdtv", r"\bhdtv\b"),
-        ("dvdrip", r"\bdvd[-\. ]?rip\b"),
-        ("hdrip", r"\bhdrip\b"),
-        ("x264", r"\bx264\b"),
-        ("x265", r"\bx265\b|\bhevc\b"),
-        ("h264", r"\bh\.?264\b"),
-        ("h265", r"\bh\.?265\b"),
-        ("mpeg", r"\bmpeg[-]?\d\b"),
-        ("avi", r"\bavi\b"),
-        ("divx", r"\bdivx\b"),
-        ("cam", r"\bcam[- ]?rip?\b"),
-        ("ts", r"\bhd?ts\b"),
-        ("mp4", r"\bmp4\b"),
-        ("mkv", r"\bmkv\b"),
-    ]
+    type: Literal["episode", "movie"]
+    title: str
+    alternative_title: NotRequired[str]
+    container: NotRequired[str]  # e.g. "mkv", "mp4"
+    date: NotRequired[str]
+    year: NotRequired[int]
+    week: NotRequired[int]
+    release_group: NotRequired[str]
+    website: NotRequired[str]
+    season: NotRequired[int | list[int]]
+    episode: NotRequired[int | list[int]]
 
-    for name, pattern in formats:
-        if re.search(pattern, title):
-            return name
-    return ""
+    # video properties
+    source: NotRequired[str]  # e.g. "BluRay", "WEB-DL"
+    screen_size: NotRequired[str]  # e.g. "1080p", "720p"
+    aspect_ratio: NotRequired[str]  # e.g. "16:9", "2.35:1"
+    video_codec: NotRequired[str]  # e.g. "h264", "hevc"
+    video_bit_rate: NotRequired[str]  # e.g. "4000kbps", "8000kbps"
+    frame_rate: NotRequired[str]  # e.g. "24fps", "30fps"
+
+
+def guess_metadata(raw_torrent_name: str) -> MetadataDict:
+    """
+    uses guessit to guess the metadata of a media file from its torrent name
+    :param raw_torrent_name: the name of the torrent
+    """
+    return guessit(raw_torrent_name)
 
 
 async def search(query: str) -> list[dict] | None:
@@ -72,14 +76,16 @@ async def search(query: str) -> list[dict] | None:
             if "Results" not in resp_json:
                 logger.error(f"Unexpected response format: {resp_json}")
             entries = resp_json.get("Results", [])
-            for entry in entries:
-                # try to infer the file format from the torrent name
-                if title := entry.get("Title", None):
-                    if inferred_format := _infer_file_format(title):
-                        entry["FileFormat"] = inferred_format
-
             return entries
 
     except Exception as e:
         logger.exception(f"Error searching for {query}: {e}")
         return None
+
+
+if __name__ == "__main__":
+    # Test the search function
+    logger.setLevel(logging.DEBUG)
+
+    print(guess_metadata("The.Matrix.1999.1080p.BluRay.x264.DTS-HD.MA.5.1-CHD"))
+    print(guess_metadata("Silo.S01.1080p.WEBRip.x265-KONTRAST"))

@@ -8,11 +8,11 @@
 
 <body>
     <div id="mainContent">
+        <div id="userProfile"></div>
         <details>
-            <summary>Show/Hide qbittorrent live stats</summary>
+            <summary>Show/Hide Request Statuses</summary>
             <div id="qbittorrent"></div>
         </details>
-        <div id="userProfile"></div>
 
         <h2 class="ascii-heading">Create a new Request</h2>
         <select id="searchType">
@@ -20,7 +20,7 @@
             <option value="magnet">Magnet Link</option>
         </select>
         <input id="searchInput" placeholder="Enter search or magnet">
-        <button id="searchBtn">Run</button>
+        <button id="searchBtn" onclick="onClick_searchBtn(this)">Run</button>
         <span id="loading" style="display:none;">⏳ Loading...</span>
         <div id="result"></div>
     </div>
@@ -28,8 +28,24 @@
     <script src="{{ url_for('static', filename='index.js') }}"></script>
     <script src="{{ url_for('static', filename='tablesort-5.3.0/dist/tablesort.min.js') }}"></script>
     <script src="{{ url_for('static', filename='tablesort-5.3.0/dist/sorts/tablesort.date.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='tablesort-5.3.0/dist/sorts/tablesort.filesize.min.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='tablesort-5.3.0/dist/sorts/tablesort.filesize.min.js') }}"></script> -->
     <script src="{{ url_for('static', filename='tablesort-5.3.0/dist/sorts/tablesort.number.min.js') }}"></script>
+    <script>
+        Tablesort.extend('screensize', function (item) {
+            // Match things like '720p', '1080p', etc.
+            return /(\d+)p/i.test(item);
+        }, function (a, b) {
+            const getResolution = (str) => {
+                const match = str.match(/(\d+)p/i);
+                return match ? parseInt(match[1], 10) : 0;
+            };
+
+            const resA = getResolution(a);
+            const resB = getResolution(b);
+            if (resA === resB) return 0;
+            return resA > resB ? -1 : 1;
+        });
+    </script>
 </body>
 
 </html>

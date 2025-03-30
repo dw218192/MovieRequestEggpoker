@@ -1,10 +1,16 @@
 <table id="result-table" class="sortable">
     <p> Found {{ entries|length }} entries </p>
+
+    <label for="torrent-filter">Filter Results:</label><br>
+    <input type="text" id="torrent-filter" class="table-filter" data-target-table="result-table"
+        placeholder="Type to filter..." onkeyup="filterTable(this)"
+        style="width: 100%; padding: 8px; box-sizing: border-box;">
     <thead>
         <tr>
             <th>Torrent Name</th>
             <th>Published</th>
-            <th>File Format (Inferred)</th>
+            <th>Screen Size (Inferred)</th>
+            <th>Language (Inferred)</th>
             <th>SE</th>
             <th>LE</th>
             <th>Size</th>
@@ -13,14 +19,35 @@
     <tbody>
         {% for entry in entries %}
         <tr>
-            <td>{{ entry.get("Title", "Unknown") }}</td>
+            {% set title = entry.get("Title", "Unknown") %}
+            {% set torrent_size = entry.get("Size", 0) %}
+            {% set can_request = entry.get("CanRequest", False) %}
+            {% set torrent_link = entry.get("MagnetUri", None) %}
+            {% set metdata = entry.get("GuessedMetadata", {}) %}
+            {% if not torrent_link %}
+            {% set torrent_link = entry.get("Link", None) %}
+            {% endif %}
+
+            <td>{{ title }}</td>
             <td>{{ entry.get("PublishDate", "Unknown") }}</td>
-            <td>{{ entry.get("FileFormat", "Unknown") }}</td>
+            <td>{{ metdata.get("screen_size", "Unknown") }}</td>
+            <td>{{ metdata.get("language", "Unknown") }}</td>
+
             <td>{{ entry.get("Seeders", "Unknown") }}</td>
             <td>{{ entry.get("Peers", "Unknown") }}</td>
             <td>
-                {{ "%.2f GB" % (entry.get("Size", 0) / 1024 / 1024 / 1024) if entry.get("Size") else "Unknown" }}
+                {{ "%.2f GB" % (torrent_size / 1024 / 1024 / 1024) if entry.get("Size") else "Unknown" }}
             </td>
+            {% if torrent_link and torrent_size %}
+            <td>
+                {% if title in user_data.pending_requests %}
+                <button disabled>Working...</button>
+                {% else %}
+                <button
+                    onclick="onClick_torrentRequestBtn('{{title}}', '{{ torrent_link }}', {{ torrent_size }}, this)">Request</button>
+                {% endif %}
+            </td>
+            {% endif %}
         </tr>
         {% endfor %}
     </tbody>

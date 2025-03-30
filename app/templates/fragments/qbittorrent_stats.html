@@ -1,5 +1,5 @@
 <h2>qbitTorrent Stats</h2>
-<p>Num of jobs: {{ entries | length }}</p>
+<p>Num of Jobs: {{ entries | length }}</p>
 
 <table>
     <thead>
@@ -36,6 +36,11 @@
                 {{ eta // 60 }} min
                 {% else %}
                 ∞
+                {% endif %}
+            </td>
+            <td>
+                {% if not completed %}
+                <button onclick="onClick_cancelTorrentRequestBtn('{{ entry.get('hash', '') }}', this)">Cancel</button>
                 {% endif %}
             </td>
         </tr>
