@@ -18,5 +18,14 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest", "pytest-flask"]
+dev = ["pytest", "pytest-flask", "pytest-asyncio"]
 tool = []
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = 'auto'
+markers = [
+    "require_qbittorrent: mark test as requiring qbittorrent to be running",
+]
+addopts = "-m 'not require_qbittorrent' --log-cli-level=INFO -s"

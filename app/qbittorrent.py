@@ -3,9 +3,11 @@ import os
 import logging
 import contextlib
 import enum
-import httpx
 import asyncio
 import pathlib
+import tempfile
+from typing import Any
+from dataclasses import dataclass
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 from typing import TypedDict
@@ -32,6 +34,37 @@ QBITTORRENT_PORT = os.getenv("QBITTORRENT_PORT", 8080)
 QBITTORRENT_URL = f"http://localhost:{QBITTORRENT_PORT}/api/v2"
 QBITTORRENT_DOWNLOAD_SUBFOLDER = os.getenv("QBITTORRENT_DOWNLOAD_SUBFOLDER", "")
 QBITTORRENT_CATEGORY = os.getenv("QBITTORRENT_CATEGORY", "")
+
+
+logger.info(f"libtorrent version: {lt.version}")  # type: ignore
+
+# this might still not work correctly on windows
+g_lt_session = lt.session({"listen_interfaces": "0.0.0.0:6881"})  # type: ignore
+
+
+@contextlib.asynccontextmanager
+async def tmp_torrent_session(magnet_link: str, timeout_s: float = 15):
+    """Create a temporary libtorrent session to extract metadata from magnet links.
+    Returns:
+        lt.session: The temporary libtorrent session.
+    """
+    info = lt.parse_magnet_uri(magnet_link)  # type: ignore
+    info.save_path = tempfile.gettempdir()
+
+    handle = None
+    try:
+        handle = g_lt_session.add_torrent(info)
+        timer = 0
+        ret = None
+        while (ret := handle.torrent_file()) is None and timer < timeout_s:
+            await asyncio.sleep(1)
+            timer += 1
+        if ret is None:
+            logger.error(f"Failed to get metadata for magnet link: {magnet_link}")
+        yield ret
+    finally:
+        if handle:
+            g_lt_session.remove_torrent(handle)
 
 
 @contextlib.asynccontextmanager
@@ -158,8 +191,8 @@ async def add_torrent(
     *,
     torrent_links: str | list[str],
     save_path: str,
-    root_folder=False,
-    exist_ok=True,
+    exist_ok: bool = False,
+    **kwargs: dict[str, Any],
 ) -> bool:
     if isinstance(torrent_links, str):
         torrent_links = [torrent_links]
@@ -191,7 +224,7 @@ async def add_torrent(
         fields = {
             "urls": "\n".join(torrent_hashes),
             "savepath": save_path,
-            "root_folder": str(root_folder).lower(),
+            **kwargs,
         }
         if QBITTORRENT_CATEGORY:
             fields["category"] = QBITTORRENT_CATEGORY
@@ -271,10 +304,36 @@ async def delete_torrent(
         return False
 
 
-async def get_torrent_hash(link_or_content: str, timeout_s: float = 50) -> str:
+@dataclass(frozen=True)
+class BasicTorrentInfo:
+    title: str
+    infohash: str
+    size: int
+    link: str
+
+    @property
+    def size_formatted(self) -> str:
+        return f"{self.size / (1024 * 1024 * 1024):.2f} GB"
+
+    @staticmethod
+    def from_libtorrent(info, link: str) -> "BasicTorrentInfo":
+        title = info.name()
+        infohash = str(info.info_hash())
+        size = info.total_size()
+        return BasicTorrentInfo(
+            title=title,
+            infohash=infohash,
+            size=size,
+            link=link,
+        )
+
+
+async def get_torrent_info(
+    link_or_content: str, timeout_s: float = 50
+) -> BasicTorrentInfo | None:
     if link_or_content.startswith("magnet:"):
-        info = lt.parse_magnet_uri(link_or_content)  # type: ignore
-        return str(info.info_hash)
+        async with tmp_torrent_session(link_or_content, timeout_s) as info:
+            return BasicTorrentInfo.from_libtorrent(info, link_or_content)
     elif link_or_content.startswith(("http://", "https://")):
         try:
             async with httpx.AsyncClient(
@@ -283,64 +342,21 @@ async def get_torrent_hash(link_or_content: str, timeout_s: float = 50) -> str:
                 response = await client.get(link_or_content)
                 if response.status_code != 200:
                     logger.error(f"Error : {response.status_code}")
-                    return ""
+                    return None
                 info = lt.torrent_info(lt.bdecode(response.content))  # type: ignore
-                return str(info.info_hash())
+                return BasicTorrentInfo.from_libtorrent(info, link_or_content)
         except httpx.UnsupportedProtocol as e:
             url = e.request.url
             if url.scheme == "magnet":
                 new_url = "magnet:" + url.raw_path.decode().lstrip("/")
-                return await get_torrent_hash(new_url, timeout_s)
-            raise e
+                return await get_torrent_info(new_url, timeout_s)
+            logger.exception(f"Unsupported protocol: {url.scheme}")
+            return None
     else:
         info = lt.torrent_info(lt.bdecode(link_or_content))  # type: ignore
-        return str(info.info_hash())
+        return BasicTorrentInfo.from_libtorrent(info, link_or_content)
 
 
-if __name__ == "__main__":
-    import app.storage
-    import tempfile
-
-    logger.setLevel(logging.DEBUG)
-
-    TEST_MAGNET_LINK = "https://webtorrent.io/torrents/big-buck-bunny.torrent"
-    TEST_MAGNET = "magnet:?xt=urn:btih:dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c&dn=Big+Buck+Bunny&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fbig-buck-bunny.torrent"
-
-    save_path = app.storage.get_best_path(400)
-    if not save_path:
-        save_path = tempfile.gettempdir()
-
-    loop = asyncio.get_event_loop()
-    task = add_torrent(
-        torrent_links=[TEST_MAGNET],
-        save_path=save_path,
-    )
-    if loop.run_until_complete(task):
-        print(f"Torrent added successfully, download dir = {save_path}")
-    else:
-        print("Failed to add torrent")
-        exit(1)
-
-    input("Press Enter to continue...")
-    task = delete_torrent(torrent_links=[TEST_MAGNET], detete_files=True)
-    if loop.run_until_complete(task):
-        print("Torrent deleted successfully")
-    else:
-        print("Failed to delete torrent")
-        exit(1)
-
-    input("Press Enter to continue...")
-
-    cases = [
-        TEST_MAGNET_LINK,
-        TEST_MAGNET,
-    ]
-
-    tasks = []
-    for case in cases:
-        tasks.append(get_torrent_hash(case))
-
-    results = loop.run_until_complete(asyncio.gather(*tasks))
-    for case, result in zip(cases, results):
-        print(f"{case[:min(30, len(case))]}... => {result}")
-        assert result
+async def get_torrent_hash(link_or_content: str, timeout_s: float = 50) -> str:
+    info = await get_torrent_info(link_or_content, timeout_s)
+    return "" if info is None else info.infohash

@@ -8,7 +8,6 @@
     <thead>
         <tr>
             <th>Torrent Name</th>
-            <th>Published</th>
             <th>Screen Size (Inferred)</th>
             <th>Language (Inferred)</th>
             <th>SE</th>
@@ -18,37 +17,26 @@
     </thead>
     <tbody>
         {% for entry in entries %}
+        {% set basic_info = entry.get("Info", None) %}
+        {% set metdata = entry.get("GuessedMetadata", {}) %}
+        {% if basic_info %}
         <tr>
-            {% set title = entry.get("Title", "Unknown") %}
-            {% set torrent_size = entry.get("Size", 0) %}
-            {% set can_request = entry.get("CanRequest", False) %}
-            {% set torrent_link = entry.get("MagnetUri", None) %}
-            {% set metdata = entry.get("GuessedMetadata", {}) %}
-            {% if not torrent_link %}
-            {% set torrent_link = entry.get("Link", None) %}
-            {% endif %}
-
-            <td>{{ title }}</td>
-            <td>{{ entry.get("PublishDate", "Unknown") }}</td>
+            <td>{{ basic_info.title }}</td>
             <td>{{ metdata.get("screen_size", "Unknown") }}</td>
             <td>{{ metdata.get("language", "Unknown") }}</td>
-
             <td>{{ entry.get("Seeders", "Unknown") }}</td>
-            <td>{{ entry.get("Peers", "Unknown") }}</td>
-            <td>
-                {{ "%.2f GB" % (torrent_size / 1024 / 1024 / 1024) if entry.get("Size") else "Unknown" }}
-            </td>
-            {% if torrent_link and torrent_size %}
+            <td>{{ entry.get("Leechers", "Unknown") }}</td>
+            <td>{{ basic_info.size_formatted }}</td>
             <td>
                 {% if title in user_data.pending_requests %}
                 <button disabled>Working...</button>
                 {% else %}
                 <button
-                    onclick="onClick_torrentRequestBtn('{{title}}', '{{ torrent_link }}', {{ torrent_size }}, this)">Request</button>
+                    onclick="onClick_torrentRequestBtn('{{basic_info.title}}', '{{ basic_info.link }}', {{ basic_info.size }}, this)">Request</button>
                 {% endif %}
             </td>
-            {% endif %}
         </tr>
+        {% endif %}
         {% endfor %}
     </tbody>
 </table>

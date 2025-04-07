@@ -116,16 +116,50 @@ async def search(user: jellyfin.JellyfinSession):
     if not query:
         return "Please provide a non-empty query", 400
 
-    entries = await jackett.search(query)
-    if entries is not None:
-        for entry in entries:
-            if title := entry.get("Title", None):
-                if metadata := jackett.guess_metadata(title):
-                    entry["GuessedMetadata"] = metadata
+    entries: list[dict] = []
+    if search_type == "magnet":
+        # direct link is the same as sending a request
+        info = await qbittorrent.get_torrent_info(query)
+        if info is None:
+            return "Invalid magnet link", 400
+        entries.append(
+            {
+                "GuessedMetadata": jackett.guess_metadata(info.title),
+                "Info": info,
+            }
+        )
+    elif search_type == "text":
+        jackett_entries = await jackett.search(query)
+        if jackett_entries is not None:
+            for jackett_entry in jackett_entries:
+                link = jackett_entry.get("MagnetUri", None)
+                if not link:
+                    link = jackett_entry.get("Link", None)
+                title = jackett_entry.get("Title", None)
+
+                if not link or not title:
+                    logger.warning(f"ignored invalid jackett entry: {jackett_entry}")
+                    continue
+
+                entry = {}
+                entry["GuessedMetadata"] = jackett.guess_metadata(title)
+                if "Seeders" in jackett_entry:
+                    entry["Seeders"] = jackett_entry["Seeders"]
+                    if "Peers" in jackett_entry:
+                        entry["Leechers"] = jackett_entry["Peers"] - entry["Seeders"]
+
+                entry["Info"] = qbittorrent.BasicTorrentInfo(
+                    title=jackett_entry["Title"],
+                    size=jackett_entry["Size"],
+                    infohash=jackett_entry["InfoHash"],
+                    link=link,
+                )
+                entries.append(entry)
     else:
-        entries = []
+        logger.error(f"Invalid search type: {search_type}")
+        return "Invalid search type", 400
+
     with transient_user_data(user["id"]) as user_data:
-        logger.info(f"User Data: {user_data}")
         return render_template(
             "fragments/search_res.html",
             query=query,

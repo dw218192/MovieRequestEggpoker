@@ -34,7 +34,7 @@ async function onClick_searchBtn(btn) {
         }
         new Tablesort(table);
     } catch (e) {
-        document.getElementById('result').innerHTML = '<p>Error during search</p>';
+        document.getElementById('result').innerHTML = `<p>Error during search: ${e}</p>`;
     } finally {
         loading.style.display = 'none';
         btn.disabled = false;
