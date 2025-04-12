@@ -50,10 +50,24 @@ if __name__ == "__main__":
         action="store_true",
         help="Restart the servers if they have already been started",
     )
+    parser.add_argument(
+        "--prod",
+        action="store_true",
+        help="Run in production mode",
+    )
     args = parser.parse_args()
 
+    if args.prod:
+        movie_request_server_cmd = [
+            "gunicorn",
+            "-c",
+            "tool/gunicorn.conf.py",
+            "app.main:init_app()",
+        ]
+    else:
+        movie_request_server_cmd = ["uv", "run", "--", "python", "-m", "app.main"]
     commands = [
-        (["uv", "run", "--", "python", "-m", "app.main"], "movie_request_server"),
+        (movie_request_server_cmd, "movie_request_server"),
     ]
 
     if args.restart:

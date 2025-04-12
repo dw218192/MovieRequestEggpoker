@@ -5,8 +5,9 @@ import contextlib
 from typing import TypedDict, NotRequired, Literal
 from guessit import guessit
 
+JACKETT_HOST = os.getenv("JACKETT_HOST", "localhost")
 JACKETT_PORT = os.getenv("JACKETT_PORT", 9117)
-JACKETT_API_URL = f"http://localhost:{JACKETT_PORT}/api/v2.0"
+JACKETT_API_URL = f"http://{JACKETT_HOST}:{JACKETT_PORT}/api/v2.0"
 JACKETT_API_KEY = os.getenv("JACKETT_API_KEY")
 
 logger = logging.getLogger(__name__)

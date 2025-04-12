@@ -4,7 +4,7 @@ import sys
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 g_log_level = os.getenv("MOVIE_REQUEST_SERVER_LOG_LEVEL", "INFO").upper()
 g_logging_config = {

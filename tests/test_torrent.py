@@ -23,7 +23,7 @@ async def test_add_torrnet():
     assert res
 
     res = await qbittorrent.delete_torrent(
-        torrent_links=[TEST_MAGNET], detete_files=True
+        torrent_links=[TEST_MAGNET], delete_files=True
     )
 
     assert res

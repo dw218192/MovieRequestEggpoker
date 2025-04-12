@@ -230,7 +230,9 @@ class JsonDatabase(IDatabase):
 
             if req.ref_count == 0:
                 self._db.all_requests.remove(req)
-                await qbittorrent.delete_torrent(torrent_hashes=torrent.infohash)
+                await qbittorrent.delete_torrent(
+                    torrent_hashes=torrent.infohash, delete_files=True
+                )
 
             self.__save()
             return True

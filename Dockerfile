@@ -6,8 +6,12 @@ WORKDIR /app
 RUN pip install uv
 
 COPY pyproject.toml .
-RUN uv pip install -r pyproject.toml
+RUN uv pip install -r pyproject.toml --system --group prod
 
 COPY . .
+RUN chmod +x deploy/entrypoint.sh && \
+    uv run tool/generate_deploy_env.py --env-file .env --override-file deploy/.env.override --output-file deploy/.env && \
+    rm .env && \
+    mv deploy/.env .
 
-CMD ["python", "app/main.py"]
+ENTRYPOINT [ "/bin/bash", "-c", "/app/deploy/entrypoint.sh" ]

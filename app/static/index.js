@@ -48,7 +48,8 @@ async function fetchQBitTorrentStats() {
     });
     if (res.ok) {
         const html = await res.text();
-        document.getElementById('qbittorrent').innerHTML = html;
+        document.getElementById('qbittorrent-stats-holder').innerHTML = html;
+        filterTable(document.getElementById('qbittorrent-stats-filter'));
     }
 }
 

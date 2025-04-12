@@ -7,7 +7,7 @@ IF "%1"=="-c" (
 ) ELSE (
     echo [*] Loading .env and running locally...
     SET LOG_DIR=%~dp0_logs
-    uv run tool/launch.py --log-dir "!LOG_DIR!"
+    uv run tool/launch.py --log-dir "!LOG_DIR!" %*
 )
 
 ENDLOCAL

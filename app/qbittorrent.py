@@ -30,9 +30,9 @@ if os.name == "nt":
 import libtorrent as lt
 
 
+QBITTORRENT_HOST = os.getenv("QBITTORRENT_HOST", "localhost")
 QBITTORRENT_PORT = os.getenv("QBITTORRENT_PORT", 8080)
-QBITTORRENT_URL = f"http://localhost:{QBITTORRENT_PORT}/api/v2"
-QBITTORRENT_DOWNLOAD_SUBFOLDER = os.getenv("QBITTORRENT_DOWNLOAD_SUBFOLDER", "")
+QBITTORRENT_URL = f"http://{QBITTORRENT_HOST}:{QBITTORRENT_PORT}/api/v2"
 QBITTORRENT_CATEGORY = os.getenv("QBITTORRENT_CATEGORY", "")
 
 
@@ -201,17 +201,6 @@ async def add_torrent(
         logger.error("No torrent links provided")
         return False
 
-    save_path_ = pathlib.Path(save_path).absolute()
-    if not save_path_.exists():
-        logger.error(f"Save path does not exist: {save_path}")
-        return False
-
-    if QBITTORRENT_DOWNLOAD_SUBFOLDER:
-        save_path_ = save_path_ / QBITTORRENT_DOWNLOAD_SUBFOLDER
-        save_path_.mkdir(exist_ok=True)
-
-    save_path = str(save_path_)
-
     torrent_hashes = [await get_torrent_hash(link) for link in torrent_links]
     if exist_ok:
         # need to check if the torrent is already added
@@ -256,7 +245,7 @@ async def delete_torrent(
     *,
     torrent_links: list[str] | str | None = None,
     torrent_hashes: list[str] | str | None = None,
-    detete_files: bool = False,
+    delete_files: bool = False,
 ) -> bool:
     if torrent_links and torrent_hashes:
         logger.error(
@@ -287,7 +276,7 @@ async def delete_torrent(
                 "/torrents/delete",
                 data={
                     "hashes": "|".join(torrent_hashes),
-                    "deleteFiles": str(detete_files).lower(),
+                    "deleteFiles": str(delete_files).lower(),
                 },
                 headers={
                     "Content-Type": "application/x-www-form-urlencoded",
@@ -333,6 +322,8 @@ async def get_torrent_info(
 ) -> BasicTorrentInfo | None:
     if link_or_content.startswith("magnet:"):
         async with tmp_torrent_session(link_or_content, timeout_s) as info:
+            if info is None:
+                return None
             return BasicTorrentInfo.from_libtorrent(info, link_or_content)
     elif link_or_content.startswith(("http://", "https://")):
         try:

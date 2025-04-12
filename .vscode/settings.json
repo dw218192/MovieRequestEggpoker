@@ -11,6 +11,10 @@
         {
             "title": "Movie Request Server",
             "pattern": "${workspaceFolder}/_logs/movie_request_server.log",
+        },
+        {
+            "title": "Production Movie Request Server",
+            "pattern": "${workspaceFolder}/_logs/deploy_movie_request_server.log",
         }
     ]
 }

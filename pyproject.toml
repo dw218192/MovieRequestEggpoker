@@ -9,6 +9,7 @@ requires-python = ">=3.11"
 
 dependencies = [
     "flask[async]",
+    "flask_limiter",
     "httpx",
     "python-dotenv",
     "dataclasses_json",
@@ -19,7 +20,7 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest", "pytest-flask", "pytest-asyncio"]
-tool = []
+prod = ["gunicorn"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

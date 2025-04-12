@@ -8,8 +8,9 @@ from typing import TypedDict
 from flask import session
 from typing import cast
 
+JELLYFIN_HOST = os.getenv("JELLYFIN_HOST", "localhost")
 JELLYFIN_PORT = os.getenv("JELLYFIN_PORT", 8096)
-JELLYFIN_URL = f"http://localhost:{JELLYFIN_PORT}"
+JELLYFIN_URL = f"http://{JELLYFIN_HOST}:{JELLYFIN_PORT}"
 JELLYFIN_API_KEY = os.getenv("JELLYFIN_API_KEY", "")
 if not JELLYFIN_API_KEY:
     raise ValueError("JELLYFIN_API_KEY environment variable is not set")

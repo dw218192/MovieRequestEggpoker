@@ -11,7 +11,12 @@
         <div id="userProfile"></div>
         <details>
             <summary>Show/Hide Request Statuses</summary>
-            <div id="qbittorrent"></div>
+            <div id="qbittorrent">
+                <input type="text" id="qbittorrent-stats-filter" class="table-filter"
+                    data-target-table="qbittorrent-stats-table" placeholder="Type to filter..."
+                    onkeyup="filterTable(this)" style="width: 100%; padding: 8px; box-sizing: border-box;">
+                <div id="qbittorrent-stats-holder"></div>
+            </div>
         </details>
 
         <h2 class="ascii-heading">Create a new Request</h2>
