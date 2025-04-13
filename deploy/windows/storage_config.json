@@ -1,0 +1,22 @@
+[
+    {
+        "host_path": "K:/",
+        "movie_request_server_mount": "/mnt/k",
+        "qbittorrent_mount": "K:/"
+    },
+    {
+        "host_path": "L:/",
+        "movie_request_server_mount": "/mnt/l",
+        "qbittorrent_mount": "L:/"
+    },
+    {
+        "host_path": "M:/",
+        "movie_request_server_mount": "/mnt/m",
+        "qbittorrent_mount": "M:/"
+    },
+    {
+        "host_path": "E:/",
+        "movie_request_server_mount": "/mnt/e",
+        "qbittorrent_mount": "E:"
+    }
+]

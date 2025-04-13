@@ -12,7 +12,7 @@ services:
       - ${JACKETT_CONFIG_DIR}:/config
       - ${JACKETT_DOWNLOADS_DIR}:/downloads
     ports:
-      - ${JACKETT_PORT}:${JACKETT_PORT}
+      - 9117:9117
     restart: unless-stopped
 
   movie-request-server:
@@ -23,12 +23,5 @@ services:
     container_name: movie-request-server
     ports:
       - "${MOVIE_REQUEST_SERVER_PORT}:${MOVIE_REQUEST_SERVER_PORT}"
-    volumes:
-      - ./_data:/app/_data
-      - ./_logs:/app/_logs
-      - /mnt/k:/mnt/k
-      - /mnt/l:/mnt/l
-      - /mnt/m:/mnt/m
-      - /mnt/e:/mnt/e
     depends_on:
       - jackett

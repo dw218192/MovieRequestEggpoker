@@ -15,6 +15,10 @@
         {
             "title": "Production Movie Request Server",
             "pattern": "${workspaceFolder}/_logs/deploy_movie_request_server.log",
+        },
+        {
+            "title": "Docker Compose",
+            "pattern": "${workspaceFolder}/_logs/docker-compose.log",
         }
     ]
 }

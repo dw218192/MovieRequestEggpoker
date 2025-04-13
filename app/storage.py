@@ -1,30 +1,34 @@
 import logging
 import shutil
 import os
+import json
 
 logger = logging.getLogger(__name__)
 
 
-def parse_mount_points(mount_points: str) -> list[tuple[str, str]]:
+def parse_mount_points(storage_config_file: str) -> list[tuple[str, str]]:
     """
     Parse the mount points from the environment variable.
     """
     ret = []
-    for mp in mount_points.split(";"):
-        if not mp:
-            continue
-        if "|" in mp:
-            qbittorrent_path, movie_request_server_path = mp.split("|")
-        else:
-            qbittorrent_path = mp
-            movie_request_server_path = mp
-        if not os.path.exists(movie_request_server_path):
-            logger.warning(f"Mount point {movie_request_server_path} does not exist")
-            continue
-        ret.append((qbittorrent_path.strip(), movie_request_server_path.strip()))
+    with open(storage_config_file, "r") as f:
+        config = json.load(f)
+        for storage_config in config:
+            qbittorrent_path = storage_config["qbittorrent_mount"]
+            movie_request_server_path = storage_config["movie_request_server_mount"]
+            if not os.path.exists(movie_request_server_path):
+                logger.warning(
+                    f"Mount point {movie_request_server_path} does not exist, ignoring"
+                )
+                continue
+            ret.append((qbittorrent_path.strip(), movie_request_server_path.strip()))
+            logger.info(f"Loaded Mount point: {storage_config}")
     return ret
 
-MOUNT_POINTS = parse_mount_points(os.getenv("MOVIE_REQUEST_SERVER_MOUNT_POINTS", ""))
+
+MOUNT_POINTS = parse_mount_points(
+    os.getenv("MOVIE_REQUEST_SERVER_STORAGE_CONFIG_FILE", "")
+)
 
 
 def get_best_path(file_size_bytes: int) -> str | None:
