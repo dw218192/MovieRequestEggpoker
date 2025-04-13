@@ -92,8 +92,8 @@ services:
   environment:
     - MOVIE_REQUEST_SERVER_STORAGE_CONFIG_FILE={storage_config_file}
   volumes:
-    - ./{data_dir}:/app/_data
-    - ./{log_dir}:/app/_logs
+    - {data_dir}:/app/_data
+    - {log_dir}:/app/_logs
     {volumes}
     """
 
@@ -105,8 +105,8 @@ services:
             OUTFILE_FORMAT.format(
                 storage_config_file="/app/_data/storage_config.json",
                 volumes="\n    ".join([f"- {v[0]}:{v[1]}" for v in volumes]),
-                data_dir=data_dir,
-                log_dir=log_dir,
+                data_dir="./" + str(data_dir.relative_to(".")),
+                log_dir="./" + str(log_dir.relative_to(".")),
             )
         )
     return override_file
@@ -121,10 +121,10 @@ if __name__ == "__main__":
         help="Path to the storage config file",
     )
     parser.add_argument(
-        "--data-dir", type=pathlib.Path, default="_data", help="Directory to store data"
+        "--data-dir", type=pathlib.Path, default="./_data", help="Directory to store data"
     )
     parser.add_argument(
-        "--log-dir", type=pathlib.Path, default="_logs", help="Directory to store logs"
+        "--log-dir", type=pathlib.Path, default="./_logs", help="Directory to store logs"
     )
     parser.add_argument(
         "--restart",
