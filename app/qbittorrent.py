@@ -321,44 +321,54 @@ class BasicTorrentInfo:
 async def get_torrent_info(
     link_or_content: str | bytes, timeout_s: float = 50
 ) -> BasicTorrentInfo | None:
-    if isinstance(link_or_content, bytes):
-        try:
-            info = lt.torrent_info(lt.bdecode(link_or_content))  # type: ignore
-            if info is None:
-                return None
-            return BasicTorrentInfo.from_libtorrent(info, "unknown")
-        except Exception as e:
-            logger.exception(f"Error parsing torrent: {e}")
-            return None
-    
-    assert isinstance(link_or_content, str)
 
-    if link_or_content.startswith("magnet:"):
-        async with tmp_torrent_session(link_or_content, timeout_s) as info:
-            if info is None:
-                return None
-            return BasicTorrentInfo.from_libtorrent(info, link_or_content)
-    elif link_or_content.startswith(("http://", "https://")):
-        try:
-            async with httpx.AsyncClient(
-                timeout=timeout_s, follow_redirects=True
-            ) as client:
-                response = await client.get(link_or_content)
-                if response.status_code != 200:
-                    logger.error(f"Error fetching torrent: {response.status_code}")
+    async def _impl(
+        link_or_content: str | bytes, source_link: str, timeout_s: float
+    ) -> BasicTorrentInfo | None:
+        if isinstance(link_or_content, bytes):
+            try:
+                info = lt.torrent_info(lt.bdecode(link_or_content))  # type: ignore
+                if info is None:
                     return None
-                return await get_torrent_info(response.content, timeout_s)
-        except httpx.UnsupportedProtocol as e:
-            url = e.request.url
-            if url.scheme == "magnet":
-                new_url = "magnet:" + url.raw_path.decode().lstrip("/")
-                return await get_torrent_info(new_url, timeout_s)
-            logger.exception(f"Unsupported protocol: {url.scheme}")
-            return None
-    
-    logger.error(f"Invalid link or content: {link_or_content}")
-    return None
+                return BasicTorrentInfo.from_libtorrent(info, source_link)
+            except Exception as e:
+                logger.exception(f"Error parsing torrent: {e}")
+                return None
 
+        assert isinstance(link_or_content, str)
+
+        if link_or_content.startswith("magnet:"):
+            async with tmp_torrent_session(link_or_content, timeout_s) as info:
+                if info is None:
+                    return None
+                return BasicTorrentInfo.from_libtorrent(info, link_or_content)
+        elif link_or_content.startswith(("http://", "https://")):
+            # either a torrent file link or a magnet link
+            try:
+                async with httpx.AsyncClient(
+                    timeout=timeout_s, follow_redirects=True
+                ) as client:
+                    response = await client.get(link_or_content)
+                    if response.status_code != 200:
+                        logger.error(f"Error fetching torrent: {response.status_code}")
+                        return None
+                    return await _impl(response.content, link_or_content, timeout_s)
+            except httpx.UnsupportedProtocol as e:
+                url = e.request.url
+                if url.scheme == "magnet":
+                    new_url = "magnet:" + url.raw_path.decode().lstrip("/")
+                    return await _impl(new_url, link_or_content, timeout_s)
+                logger.exception(f"Unsupported protocol: {url.scheme}")
+                return None
+
+        logger.error(f"Invalid link or content: {link_or_content}")
+        return None
+
+    return await _impl(
+        link_or_content,
+        link_or_content if isinstance(link_or_content, str) else "",
+        timeout_s,
+    )
 
 
 async def get_torrent_hash(link_or_content: str | bytes, timeout_s: float = 50) -> str:

@@ -1,6 +1,5 @@
 import logging, logging.config
 import os
-import sys
 
 from dotenv import load_dotenv
 
