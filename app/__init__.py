@@ -7,12 +7,17 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 g_log_level = os.getenv("MOVIE_REQUEST_SERVER_LOG_LEVEL", "INFO").upper()
+g_log_file_name = os.getenv("MOVIE_REQUEST_SERVER_LOG_FILE", "_logs/app.log")
+
 g_logging_config = {
     "version": 1,
     "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
             "formatter": "default",
+            "filename": g_log_file_name,
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 2,
         }
     },
     "formatters": {
@@ -22,11 +27,11 @@ g_logging_config = {
     },
     "loggers": {
         "root": {
-            "handlers": ["console"],
+            "handlers": ["file"],
             "level": "WARNING",
         },
         __package__: {
-            "handlers": ["console"],
+            "handlers": ["file"],
             "level": g_log_level,
             "propagate": False,
         },

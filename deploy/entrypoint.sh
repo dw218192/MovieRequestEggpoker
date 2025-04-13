@@ -5,4 +5,4 @@ _log_dir=$_root_dir/_logs
 
 mkdir -p $_log_dir
 
-uv run gunicorn -c $_root_dir/tool/gunicorn.conf.py 'app.main:init_app()' > $_log_dir/deploy_movie_request_server.log 2>&1
+uv run gunicorn -c $_root_dir/tool/gunicorn.conf.py 'app.main:init_app()'

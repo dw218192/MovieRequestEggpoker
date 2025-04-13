@@ -6,6 +6,7 @@ import signal
 import sys
 import json
 import shutil
+import os
 
 
 def run_cmd(
@@ -136,7 +137,19 @@ if __name__ == "__main__":
         action="store_true",
         help="Run in production mode using docker compose",
     )
+    parser.add_argument(
+        "--clear-logs",
+        action="store_true",
+        help="Clear the logs before starting the servers",
+    )
     args = parser.parse_args()
+
+    if args.clear_logs:
+        for log_file in args.log_dir.glob("*.log"):
+            log_file.unlink()
+
+    if not args.storage_config.exists():
+        raise FileNotFoundError(f"Storage config file {args.storage_config} not found")
 
     if args.deploy:
         override_file = gen_docker_compose_override(
@@ -162,6 +175,9 @@ if __name__ == "__main__":
             (compose_command, "docker-compose"),
         ]
     else:
+        os.environ["MOVIE_REQUEST_SERVER_STORAGE_CONFIG_FILE"] = str(
+            args.storage_config
+        )
         commands = [
             (["uv", "run", "--", "python", "-m", "app.main"], "movie_request_server"),
         ]

@@ -23,11 +23,15 @@ def parse_mount_points(storage_config_file: str) -> list[tuple[str, str]]:
                 continue
             ret.append((qbittorrent_path.strip(), movie_request_server_path.strip()))
             logger.info(f"Loaded Mount point: {storage_config}")
+
+    if not ret:
+        logger.error("No mount points found")
+        raise ValueError("No mount points found")
     return ret
 
 
 MOUNT_POINTS = parse_mount_points(
-    os.getenv("MOVIE_REQUEST_SERVER_STORAGE_CONFIG_FILE", "")
+    os.getenv("MOVIE_REQUEST_SERVER_STORAGE_CONFIG_FILE", "./storage_config.json")
 )
 
 
