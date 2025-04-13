@@ -37,6 +37,7 @@ QBITTORRENT_CATEGORY = os.getenv("QBITTORRENT_CATEGORY", "")
 
 
 logger.info(f"libtorrent version: {lt.version}")  # type: ignore
+logger.info(f"QBITTORRENT_URL: {QBITTORRENT_URL}")
 
 # this might still not work correctly on windows
 g_lt_session = lt.session({"listen_interfaces": "0.0.0.0:6881"})  # type: ignore

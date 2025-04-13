@@ -2,16 +2,25 @@ import httpx
 import os
 import logging
 import contextlib
+import json
 from typing import TypedDict, NotRequired, Literal
 from guessit import guessit
 
 JACKETT_HOST = os.getenv("JACKETT_HOST", "localhost")
-JACKETT_PORT = os.getenv("JACKETT_PORT", 9117)
+JACKETT_CONFIG_DIR = os.getenv("JACKETT_CONFIG_DIR", "./_data/jackett/config")
+
+def get_jackett_server_info() -> tuple[str, int]:
+    config_path = os.path.join(JACKETT_CONFIG_DIR, "Jackett", "ServerConfig.json")
+    with open(config_path, "r") as f:
+        config = json.load(f)
+    return config["APIKey"], config["Port"]
+
+
+JACKETT_API_KEY, JACKETT_PORT = get_jackett_server_info()
 JACKETT_API_URL = f"http://{JACKETT_HOST}:{JACKETT_PORT}/api/v2.0"
-JACKETT_API_KEY = os.getenv("JACKETT_API_KEY")
 
 logger = logging.getLogger(__name__)
-
+logger.info(f"JACKETT_API_URL: {JACKETT_API_URL}, JACKETT_API_KEY: {JACKETT_API_KEY[:min(len(JACKETT_API_KEY), 10)]}...")
 
 @contextlib.asynccontextmanager
 async def async_client():
@@ -57,7 +66,6 @@ def guess_metadata(raw_torrent_name: str) -> MetadataDict:
     :param raw_torrent_name: the name of the torrent
     """
     return guessit(raw_torrent_name)
-
 
 async def search(query: str) -> list[dict] | None:
     try:

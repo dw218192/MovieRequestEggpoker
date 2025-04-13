@@ -16,7 +16,7 @@ if not JELLYFIN_API_KEY:
     raise ValueError("JELLYFIN_API_KEY environment variable is not set")
 
 logger = logging.getLogger(__name__)
-
+logger.info(f"JELLYFIN_URL: {JELLYFIN_URL}")
 
 @contextlib.asynccontextmanager
 async def async_client():
