@@ -22,3 +22,6 @@ if __name__ == "__main__":
                 value = overrides[key]
             f.write(f"{key}={value}\n")
 
+        for key, value in overrides.items():
+            if key not in dotenv:
+                f.write(f"{key}={value}\n")
