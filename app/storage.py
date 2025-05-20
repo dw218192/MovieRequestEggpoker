@@ -34,6 +34,10 @@ MOUNT_POINTS = parse_mount_points(
     os.getenv("MOVIE_REQUEST_SERVER_STORAGE_CONFIG_FILE", "./storage_config.json")
 )
 
+QBITTORRENT_DOWNLOAD_SUBFOLDER = os.getenv("QBITTORRENT_DOWNLOAD_SUBFOLDER", "")
+
+if QBITTORRENT_DOWNLOAD_SUBFOLDER:
+    logger.info(f"Download subfolder: {QBITTORRENT_DOWNLOAD_SUBFOLDER}")
 
 def get_best_path(file_size_bytes: int) -> str | None:
     """
@@ -55,7 +59,10 @@ def get_best_path(file_size_bytes: int) -> str | None:
 
     # Return the mount point with most free space
     candidates.sort(reverse=True)
-    return candidates[0][1]
+    ret = candidates[0][1]
+    if QBITTORRENT_DOWNLOAD_SUBFOLDER:
+        return os.path.join(ret, QBITTORRENT_DOWNLOAD_SUBFOLDER)
+    return ret
 
 
 if __name__ == "__main__":

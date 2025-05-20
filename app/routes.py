@@ -1,6 +1,7 @@
 import inspect
 import logging
 import functools
+import os
 from .extensions import g_db, g_limiter
 from dataclasses import dataclass, field
 import contextlib
@@ -246,7 +247,7 @@ async def request_torrent(user: jellyfin.JellyfinSession):
                 f"No disk can hold torrent {torrent_hash} with file size {torrent_size} bytes"
             )
             return "No disk can hold the file", 500
-
+        os.makedirs(best_path, exist_ok=True)
         logger.debug(f"add download job for {torrent_hash} to {best_path}")
         if not await qbittorrent.add_torrent(
             torrent_links=torrent_link,
